@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音识别应用</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: #667eea;
+            font-size: 1.5rem;
+        }
+
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.success { background: #28a745; }
+        .status-dot.error { background: #dc3545; }
+        .status-dot.warning { background: #ffc107; }
+        .status-dot.info { background: #17a2b8; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            margin-bottom: 16px;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            flex: 1;
+            min-width: 140px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(220, 53, 69, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .timer {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .speaker-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .speaker-tag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-radius: 20px;
+            color: #2e7d32;
+            font-weight: 500;
+        }
+
+        .speaker-tag .count {
+            background: #4caf50;
+            color: white;
+            font-size: 0.8rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .speaker-tag .delete {
+            cursor: pointer;
+            color: #ef5350;
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+        }
+
+        .speaker-tag .delete:hover {
+            transform: scale(1.2);
+        }
+
+        .detection-area {
+            position: relative;
+            border: 2px dashed #667eea;
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .detection-area.active {
+            border-color: #dc3545;
+            background: rgba(220, 53, 69, 0.05);
+            animation: border-pulse 1s infinite;
+        }
+
+        @keyframes border-pulse {
+            0%, 100% { border-width: 2px; }
+            50% { border-width: 4px; }
+        }
+
+        .detection-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+
+        .detection-area.active .detection-icon {
+            animation: icon-pulse 1s infinite;
+        }
+
+        @keyframes icon-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .detection-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .result-message {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #dc3545;
+            animation: fade-in 0.5s;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            z-index: 1000;
+            animation: slide-up 0.3s;
+        }
+
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .debug-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px 20px;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔊 语音识别应用</h1>
+            <p>录入音色，识别说话者</p>
+        </header>
+
+        <div class="card">
+            <div class="card-title">
+                <span>🎤</span> 麦克风状态
+            </div>
+            <div id="mic-status" class="status-bar status-info">
+                <span class="status-dot info"></span>
+                <span>正在检查麦克风权限...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>📝</span> 录入说话者音色
+            </div>
+            <input type="text" id="speaker-name" placeholder="输入说话者名称（如：甲）" maxlength="10">
+            <div class="btn-group">
+                <button id="start-record" class="btn-primary" disabled>
+                    <span>🎙️</span> 开始录制
+                </button>
+                <button id="stop-record" class="btn-danger" disabled>
+                    <span>⏹️</span> 停止录制
+                </button>
+            </div>
+            <div id="timer" class="timer" style="display: none;">00:00</div>
+            <div id="record-status" class="status-bar status-info" style="display: none;">
+                <span class="status-dot info"></span>
+                <span>正在录制...</span>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>👥</span> 已录入说话者
+            </div>
+            <div id="speaker-list" class="speaker-list">
+                <div class="empty-state">
+                    <i>👤</i>
+                    <p>暂无录入的说话者</p>
+                </div>
+            </div>
+            <button id="refresh-speakers" class="btn-secondary" style="margin-top: 16px; width: 100%;">
+                <span>🔄</span> 刷新列表
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>🔍</span> 实时检测
+            </div>
+            <div id="detection-area" class="detection-area">
+                <div class="detection-icon">🔇</div>
+                <div class="detection-text">点击下方按钮开始检测</div>
+                <div id="detection-result"></div>
+            </div>
+            <div class="btn-group" style="margin-top: 20px;">
+                <button id="start-detection" class="btn-success">
+                    <span>▶️</span> 开始检测
+                </button>
+                <button id="stop-detection" class="btn-danger" disabled>
+                    <span>⏹️</span> 停止检测
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title">
+                <span>🔧</span> 调试信息
+            </div>
+            <div id="debug-info" class="debug-info">等待操作...</div>
+        </div>
+    </div>
+
+    <script>
+        const MIC_STATUS = document.getElementById('mic-status');
+        const SPEAKER_NAME = document.getElementById('speaker-name');
+        const START_RECORD = document.getElementById('start-record');
+        const STOP_RECORD = document.getElementById('stop-record');
+        const TIMER = document.getElementById('timer');
+        const RECORD_STATUS = document.getElementById('record-status');
+        const SPEAKER_LIST = document.getElementById('speaker-list');
+        const REFRESH_SPEAKERS = document.getElementById('refresh-speakers');
+        const DETECTION_AREA = document.getElementById('detection-area');
+        const DETECTION_RESULT = document.getElementById('detection-result');
+        const START_DETECTION = document.getElementById('start-detection');
+        const STOP_DETECTION = document.getElementById('stop-detection');
+        const DEBUG_INFO = document.getElementById('debug-info');
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let timerInterval = null;
+        let timerSeconds = 0;
+        let detectionInterval = null;
+        let recognition = null;
+        let isDetecting = false;
+
+        const SPEAKERS_KEY = 'voice_speakers';
+        const MODEL_KEY = 'voice_model';
+
+        function logDebug(message) {
+            const now = new Date().toLocaleTimeString();
+            DEBUG_INFO.innerHTML = `[${now}] ${message}\n${DEBUG_INFO.innerHTML}`;
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        function updateMicStatus(status) {
+            MIC_STATUS.className = `status-bar status-${status.type}`;
+            MIC_STATUS.innerHTML = `
+                <span class="status-dot ${status.type}"></span>
+                <span>${status.message}</span>
+            `;
+            START_RECORD.disabled = status.type !== 'success';
+        }
+
+        function updateTimer() {
+            timerSeconds++;
+            const mins = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+            const secs = (timerSeconds % 60).toString().padStart(2, '0');
+            TIMER.textContent = `${mins}:${secs}`;
+        }
+
+        function saveSpeaker(speakerName, audioData) {
+            const speakers = JSON.parse(localStorage.getItem(SPEAKERS_KEY) || '{}');
+            if (!speakers[speakerName]) {
+                speakers[speakerName] = [];
+            }
+            speakers[speakerName].push(audioData);
+            localStorage.setItem(SPEAKERS_KEY, JSON.stringify(speakers));
+            logDebug(`已保存 ${speakerName} 的第 ${speakers[speakerName].length} 个样本`);
+            showToast(`已保存 ${speakerName} 的语音样本 (第${speakers[speakerName].length}个)`);
+            renderSpeakerList();
+        }
+
+        function deleteSpeaker(speakerName) {
+            const speakers = JSON.parse(localStorage.getItem(SPEAKERS_KEY) || '{}');
+            delete speakers[speakerName];
+            localStorage.setItem(SPEAKERS_KEY, JSON.stringify(speakers));
+            showToast(`已删除 ${speakerName}`);
+            renderSpeakerList();
+        }
+
+        function renderSpeakerList() {
+            const speakers = JSON.parse(localStorage.getItem(SPEAKERS_KEY) || '{}');
+            const keys = Object.keys(speakers);
+            
+            if (keys.length === 0) {
+                SPEAKER_LIST.innerHTML = `
+                    <div class="empty-state">
+                        <i>👤</i>
+                        <p>暂无录入的说话者</p>
+                    </div>
+                `;
+                return;
+            }
+
+            SPEAKER_LIST.innerHTML = keys.map(name => `
+                <div class="speaker-tag">
+                    <span>${name}</span>
+                    <span class="count">${speakers[name].length}</span>
+                    <span class="delete" onclick="deleteSpeaker('${name}')">×</span>
+                </div>
+            `).join('');
+        }
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                timerSeconds = 0;
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    stream.getTracks().forEach(track => track.stop());
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioData = await audioBlob.arrayBuffer();
+                    const base64Data = btoa(String.fromCharCode(...new Uint8Array(audioData)));
+                    saveSpeaker(SPEAKER_NAME.value.trim(), base64Data);
+                    stopRecordingUI();
+                };
+
+                mediaRecorder.start(100);
+                startRecordingUI();
+                logDebug('开始录制语音');
+            } catch (error) {
+                logDebug(`录制失败: ${error.message}`);
+                showToast('录制失败，请检查麦克风权限');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                logDebug('停止录制');
+            }
+        }
+
+        function startRecordingUI() {
+            START_RECORD.disabled = true;
+            STOP_RECORD.disabled = false;
+            TIMER.style.display = 'block';
+            RECORD_STATUS.style.display = 'block';
+            TIMER.textContent = '00:00';
+            timerInterval = setInterval(updateTimer, 1000);
+        }
+
+        function stopRecordingUI() {
+            START_RECORD.disabled = false;
+            STOP_RECORD.disabled = true;
+            TIMER.style.display = 'none';
+            RECORD_STATUS.style.display = 'none';
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'zh-CN';
+                utterance.rate = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        function detectSpeaker(audioData) {
+            const speakers = JSON.parse(localStorage.getItem(SPEAKERS_KEY) || '{}');
+            const speakerNames = Object.keys(speakers);
+            
+            if (speakerNames.length === 0) {
+                return null;
+            }
+
+            const scores = {};
+            speakerNames.forEach(name => {
+                const samples = speakers[name];
+                let totalScore = 0;
+                samples.forEach(sample => {
+                    const similarity = compareAudio(audioData, sample);
+                    totalScore += similarity;
+                });
+                scores[name] = totalScore / samples.length;
+            });
+
+            const maxName = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            if (scores[maxName] > 0.5) {
+                return maxName;
+            }
+            return null;
+        }
+
+        function compareAudio(audio1, audio2) {
+            const arr1 = new Uint8Array(atob(audio1).split('').map(c => c.charCodeAt(0)));
+            const arr2 = new Uint8Array(atob(audio2).split('').map(c => c.charCodeAt(0)));
+            
+            const minLen = Math.min(arr1.length, arr2.length);
+            let sum = 0;
+            for (let i = 0; i < minLen; i++) {
+                sum += Math.abs(arr1[i] - arr2[i]);
+            }
+            const avgDiff = sum / minLen;
+            return Math.max(0, 1 - avgDiff / 255);
+        }
+
+        async function startDetection() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                isDetecting = true;
+
+                let detectTimeout = null;
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    if (!isDetecting) return;
+                    
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioData = await audioBlob.arrayBuffer();
+                    const base64Data = btoa(String.fromCharCode(...new Uint8Array(audioData)));
+                    
+                    const detectedSpeaker = detectSpeaker(base64Data);
+                    if (detectedSpeaker) {
+                        DETECTION_RESULT.innerHTML = `<div class="result-message">${detectedSpeaker}，闭嘴！</div>`;
+                        speak(`${detectedSpeaker}，闭嘴`);
+                        setTimeout(() => DETECTION_RESULT.innerHTML = '', 3000);
+                        logDebug(`检测到: ${detectedSpeaker}`);
+                    }
+                    
+                    audioChunks = [];
+                    mediaRecorder.start(100);
+                };
+
+                mediaRecorder.start(3000);
+                startDetectionUI();
+                logDebug('开始实时检测');
+            } catch (error) {
+                logDebug(`检测失败: ${error.message}`);
+                showToast('检测失败，请检查麦克风权限');
+            }
+        }
+
+        function stopDetection() {
+            isDetecting = false;
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+            stopDetectionUI();
+            logDebug('停止检测');
+        }
+
+        function startDetectionUI() {
+            START_DETECTION.disabled = true;
+            STOP_DETECTION.disabled = false;
+            DETECTION_AREA.classList.add('active');
+            DETECTION_AREA.querySelector('.detection-icon').textContent = '🎙️';
+            DETECTION_AREA.querySelector('.detection-text').textContent = '正在监听中...';
+        }
+
+        function stopDetectionUI() {
+            START_DETECTION.disabled = false;
+            STOP_DETECTION.disabled = true;
+            DETECTION_AREA.classList.remove('active');
+            DETECTION_AREA.querySelector('.detection-icon').textContent = '🔇';
+            DETECTION_AREA.querySelector('.detection-text').textContent = '点击下方按钮开始检测';
+            DETECTION_RESULT.innerHTML = '';
+        }
+
+        async function checkMicPermission() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop());
+                updateMicStatus({ type: 'success', message: '✅ 麦克风权限已获取' });
+                logDebug('麦克风权限已获取');
+            } catch (error) {
+                if (error.name === 'NotAllowedError') {
+                    updateMicStatus({ type: 'error', message: '❌ 麦克风权限已被拒绝' });
+                    logDebug('麦克风权限被拒绝');
+                } else if (error.name === 'NotFoundError') {
+                    updateMicStatus({ type: 'error', message: '❌ 未找到麦克风设备' });
+                    logDebug('未找到麦克风');
+                } else {
+                    updateMicStatus({ type: 'warning', message: '⚠️ 麦克风状态未知' });
+                    logDebug(`麦克风错误: ${error.message}`);
+                }
+            }
+        }
+
+        SPEAKER_NAME.addEventListener('input', () => {
+            START_RECORD.disabled = !SPEAKER_NAME.value.trim() || MIC_STATUS.classList.contains('status-error');
+        });
+
+        START_RECORD.addEventListener('click', startRecording);
+        STOP_RECORD.addEventListener('click', stopRecording);
+        REFRESH_SPEAKERS.addEventListener('click', renderSpeakerList);
+        START_DETECTION.addEventListener('click', startDetection);
+        STOP_DETECTION.addEventListener('click', stopDetection);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkMicPermission();
+            renderSpeakerList();
+            logDebug('应用加载完成');
+        });
+
+        window.deleteSpeaker = deleteSpeaker;
+    </script>
+</body>
+</html>
