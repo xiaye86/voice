@@ -642,8 +642,9 @@
                     if (detectedSpeaker) {
                         DETECTION_RESULT.innerHTML = `<div class="result-message">${detectedSpeaker}，闭嘴！</div>`;
                         speak(`${detectedSpeaker}，闭嘴`);
-                        setTimeout(() => DETECTION_RESULT.innerHTML = '', 3000);
                         logDebug(`检测到: ${detectedSpeaker}`);
+                        stopDetection();
+                        return;
                     }
                     
                     audioChunks = [];
